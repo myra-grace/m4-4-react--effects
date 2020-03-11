@@ -121,11 +121,11 @@ You _definitely_ don't want to do this in every render
 const App = () => {
   const [cart, setCart] = React.useState({});
 
-  fetch('some-url')
-    .then(data => {
-      console.log('Got data:', data);
-      setCart(data);
-    })
+  // fetch('some-url')
+  //   .then(data => {
+  //     console.log('Got data:', data);
+  //     setCart(data);     //THE DOUBLE FETCH MIGHT TRIGGER A LOOP OF FETCHES BETTER TO REMOVE THIS WHOLE THING AND [cart] DOWN BELLOW
+  //   })
 
   React.useEffect(() => {
       fetch('some-url')
@@ -134,8 +134,8 @@ const App = () => {
           setCart(data);
         });
     
-      return JSON.stringify(cart, null, 2);
-  }, [cart]);
+      return JSON.stringify(cart, null, 2);  //THIS SHOULDN'T BE HERE
+  }, [cart]); //this cart
   
   // ...
 }
@@ -153,11 +153,13 @@ Update the following snippets to make use of `useEffect`
 
 ---
 
-```js
+```js  FIXED
 const App = () => {
   const [count, setCount] = React.useState(0);
 
-  document.title = `You have clicked ${count} times`;
+  React.useEffect(() => {                                       //this will happpen after the return because it's .useEffect
+    document.title = `You have clicked ${count} times`;         //possible to set conditions to .useEffect (must be inside .useEffect) if this then useEffect
+  }, [count]);
 
   return (
     <button onClick={() => setCount(count + 1)}>
@@ -169,13 +171,19 @@ const App = () => {
 
 ---
 
-```js
+```js  FIXED
 const App = ({ color }) => {
   const [value, setValue] = React.useState(false);
 
-  window.localStorage.setItem('value', value);
-  window.localStorage.setItem('color', color);
+  React.useEffect(() => {
+    window.localStorage.setItem('value', value);
+  }, [value]);
+                                          //ONE FOR EACH SO THAT BOTH DON'T RESET OR RE-RENDER
+  React.useEffect(() => {
+    window.localStorage.setItem('value', value);
+  }, [color]);
 
+  
   return (
     <div>
       Value: {value}
@@ -189,13 +197,15 @@ const App = ({ color }) => {
 
 ---
 
-```js
+```js  FIXED
 const Modal = ({ handleClose }) => {
-  window.addEventListener('keydown', (ev) => {
-    if (ev.code === 'Escape') {
-      handleClose();
-    }
-  });
+  React.useEffect(() => {
+    window.addEventListener('keydown', (ev) => {
+      if (ev.code === 'Escape') {
+        handleClose();
+      }
+    });
+  }, []);           //this empty array causes .useEffect to happen only the first time load
 
   return (
     <div>
@@ -238,7 +248,7 @@ It also has a link to the other route.
 ```js
 const Home = () => {
   React.useEffect(() => {
-    window.addEventListener('scroll', func());
+    window.addEventListener('scroll', func());  //need to add a remove event listener thing. will see in next slide
   }, []);
 
   return (
@@ -269,7 +279,7 @@ const Home = () => {
     window.addEventListener('scroll', aFunc());
 
     return () => {
-      window.removeEventListener('scroll', aFunc());
+      window.removeEventListener('scroll', aFunc()); //this is important
     }
   }, []);
 }
@@ -311,14 +321,18 @@ Make sure to do the appropriate cleanup work
 
 ---
 
-```js
+```js  FIXED
 // seTimeout is similar to setInterval...
 const App = () => {
   React.useEffect(() => {
-    window.setTimeout(() => {
+    const myTimeout = window.setTimeout(() => {
       console.log('1 second after update!')
-    });
-  }, [])
+    }, 1000);
+
+    return () => {
+      clearTimeout(myTimeout);
+      }
+  }, []);
 
   return null;
 }
@@ -326,13 +340,20 @@ const App = () => {
 
 ---
 
-```js
+```js  FIXED
 const App = () => {
-  React.useEffect(() => {
-    window.addEventListener('keydown', (ev) => {
+  const handle = (ev) => {
       console.log('You pressed: ' + ev.code);
-    })
-  }, [])
+  }
+
+  React.useEffect(() => {
+    window.addEventListener('keydown', handle);
+
+    return () => {
+    window.removeEventListener('keydown', handle);
+    }
+  }, []);
+
 
   return null;
 }
@@ -402,11 +423,36 @@ const App = ({ path }) => {
 <div class='col'>
 
 ```js
-// refactoring time...
+// refactoring time...             //CUSTOM HOOKS MUST HAVE AT LEAST 1 REGULAR REACT HOOK
+
+const useMousePos = () => {
+  const [mousePosition, setMousePosition]] =
+  React. useState({
+    x: null,
+    y: null
+  });
+
+  React.useEffect(() => {
+    const handleMousemove = (ev) => {
+      setMousePosition({ x:ev.clientX, y: ev.clientY });
+    };
+
+  window.addEventListener('mousemove', handleMousemove);
+
+  return () => {
+    window.removeEventListener('mousemove', handleMousemove)
+  }
+  }, []);
+
+  return (
+    </div>
+      The mouse is at {mousePosition.x}, {mousePosition.y}.
+    </div>
+  )
+}
 
 ```
-</div>
-</div>
+
 
 ---
 
@@ -416,23 +462,27 @@ Extract a custom hook
 
 ---
 
-```js
+```js  FIXED
+const useData = () => {
+    const [data, setData] = React.useState(null);
+
+      React.useEffect(() => {
+        fetch(path)
+          .then(res => res.json())
+          .then(json => {
+            setData(json);
+          });
+      }, [path]);
+      return data;
+}
+
 const App = ({ path }) => {
-  const [data, setData] = React.useState(null);
-
-  React.useEffect(() => {
-    fetch(path)
-      .then(res => res.json())
-      .then(json => {
-        setData(json);
-      })
-  }, [path])
-
-  return (
-    <span>
-      Data: {JSON.stringify(data)}
-    </span>
-  );
+  const data = useData(path);
+      return (
+        <span>
+          Data: {JSON.stringify(data)}
+        </span>
+      );
 }
 ```
 

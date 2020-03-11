@@ -74,8 +74,9 @@ Fix the following state hooks
 
 ```js
 const Button = ({ type, children }) => {
+  //const [color, setColor] = React.useState('red'); HERE
   if (type === 'primary') {
-    const [color, setColor] = React.useState('red');
+    const [color, setColor] = React.useState('red'); //this moves ^
 
     return (
       <button

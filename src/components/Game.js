@@ -1,7 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-
 import cookieSrc from '../cookie.svg';
+import Item from './Item';
+import useInterval from '../hooks/use-interval.hook'
+
+//-------------------------------------------------------------
 
 const items = [
   { id: 'cursor', name: 'Cursor', cost: 10, value: 1 },
@@ -9,35 +12,111 @@ const items = [
   { id: 'farm', name: 'Farm', cost: 1000, value: 80 },
 ];
 
+//---------------------- GAME ------------------------
+
 const Game = () => {
-  // TODO: Replace this with React state!
-  const numCookies = 100;
-  const purchasedItems = {
-    cursor: 0,
-    grandma: 0,
-    farm: 0,
+  const [perSecond, setPerSecond] = React.useState(0);
+  const [numCookies, setNumCookies] = React.useState(10);
+  const [purchasedItems, setPurchasedItems] = React.useState({
+      cursor: 0,
+      grandma: 0,
+      farm: 0
+  });
+
+  //```````````````````` FUCTIONS ````````````````````
+
+  React.useEffect(() => {
+    document.title = `${numCookies} cookies - Cookie Clicker Workshop`;
+
+    return () => {
+      document.title = `Cookie Clicker Workshop`;
+    };
+  }, [numCookies]);
+
+  React.useEffect(() => {
+    function spaceHandler(event) {
+      if (event.code === 'Space') {
+      setNumCookies(numCookies + 1);
+      }
+    }
+    window.addEventListener('keyup', spaceHandler);
+
+    return () => {
+      window.removeEventListener('keyup', spaceHandler);
+    };
+  }, [numCookies]);
+
+  function buyItem(itemName) {
+    let itemObj = items.find(item => item.name === itemName)
+    if (numCookies < itemObj.cost) {
+      console.log('NOT ENOUGHT FUNDS');
+    } else {
+      console.log('BOUGHT');
+      setNumCookies(numCookies - itemObj.cost);
+      let theItem = itemObj.id
+      
+      setPurchasedItems({...purchasedItems, [theItem]: purchasedItems[theItem] +1})
+      
+      setPerSecond(perSecond + itemObj.value);
+    }
   };
+
+  // React.useEffect(() => {
+  //   function enterHandler(event) {
+  //     if (event.code === 'Enter') {
+  //     buyItem();
+  //     }
+  //   }
+  //   window.addEventListener('keyup', enterHandler);
+
+  //   return () => {
+  //     window.removeEventListener('keyup', enterHandler);
+  //   };
+  // }, []);
+
+  function calculateCookiesPerTick() {
+    let result = 0;
+    items.forEach((item) => {
+      let amount = purchasedItems[item.id];
+      let value = item.value;
+      result += value * amount
+    })
+    return result;
+  }
+  useInterval(() => {
+    const numOfGeneratedCookies = calculateCookiesPerTick(purchasedItems);
+    setNumCookies(numCookies + numOfGeneratedCookies);
+  }, 1000)
+
+  //```````````````````````````````````````````````````
 
   return (
     <Wrapper>
       <GameArea>
         <Indicator>
           <Total>{numCookies} cookies</Total>
-          {/* TODO: Calcuate the cookies per second and show it here: */}
-          <strong>0</strong> cookies per second
+          <strong>{perSecond}</strong> cookies per second
         </Indicator>
-        <Button>
+        <Button onClick={() => setNumCookies(numCookies + 1)}>
           <Cookie src={cookieSrc} />
         </Button>
       </GameArea>
 
       <ItemArea>
         <SectionTitle>Items:</SectionTitle>
-        {/* TODO: Add <Item> instances here, 1 for each item type. */}
+        <ul>
+          {items.map((item, index) => {
+            return <Item name={item.name} cost={item.cost} value={item.value} 
+            purchasedItems={purchasedItems} purchased={purchasedItems[item.id]}
+            buyItem={buyItem} index={index}
+            />})}
+        </ul>
       </ItemArea>
     </Wrapper>
   );
 };
+
+//---------------------- STYLE ----------------------
 
 const Wrapper = styled.div`
   display: flex;
@@ -87,4 +166,5 @@ const Total = styled.h3`
   color: lime;
 `;
 
+//------------------- EXPORTS --------------------
 export default Game;

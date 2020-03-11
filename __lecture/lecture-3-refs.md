@@ -13,7 +13,7 @@ const Form = () => {
   React.useEffect(() => {
     const firstNameInput = document.querySelector('#first-name');
 
-    firstNameInput.focus();
+    firstNameInput.focus();  //automatically puts cursor at first thing. There's a better way to do it with React.
   }, []);
 
   return (
@@ -50,17 +50,17 @@ React offers another way: `useRef`
 
 ```js live=true
 const Form = () => {
-  const firstNameRef = React.useRef(null);
+  const firstNameRef = React.useRef(null); //HERE
 
   React.useEffect(() => {
-    firstNameRef.current.focus();
+    firstNameRef.current.focus();  //AND HERE
   }, []);
 
   return (
     <>
       <label>
         First Name
-        <input ref={firstNameRef} />
+        <input ref={firstNameRef} />  //AND HERE
       </label>
       <br />
       <label>
@@ -96,17 +96,17 @@ Use `useRef`
 
 ---
 
-```js
+```js  FIXED
 const ConfirmButton = () => {
   React.useEffect(() => {
     const btn = document.getElementById('confirm-button');
 
     if (btn) {
-      btn.focus();
+      btn.current.focus();
     }
   }, []);
 
-  return <button id="confirm-button">Confirm</button>;
+  return <button ref={btn} id="confirm-button">Confirm</button>;
 };
 ```
 
