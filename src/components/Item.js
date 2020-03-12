@@ -5,19 +5,21 @@ function Item(props) {
     const firstProductRef = useRef(null);
     
     React.useEffect(() => {
-        if (props.index == 0) {
+        if (props.index === 0) {
             console.log('firstProductRef: ', firstProductRef);
             firstProductRef.current.focus();
         }
     }, []);
 
     return (
-        <Products ref={firstProductRef} onClick={() => props.buyItem(props.name)}>
+        <Products onClick={() => props.buyItem(props.name)}>
+            <MyButton ref={firstProductRef}>
             <h4>{props.name}</h4>
             <MyDiv>
               <PTag>Cost: {props.cost} cookies Produces: {props.value} cookies/second.</PTag>
               <Purchased>{props.purchased}</Purchased>
             </MyDiv>
+            </MyButton>
         </Products>
     )
 };
@@ -44,6 +46,13 @@ const Purchased = styled.h4`
   font-size: 20px;
   position: absolute;
   right: 15px;
+}
+`
+const MyButton = styled.button`
+  color: white;
+  background-color: transparent;
+  border: none;
+  text-align: left;
 }
 `
 

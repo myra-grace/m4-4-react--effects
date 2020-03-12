@@ -16,7 +16,7 @@ const items = [
 
 const Game = () => {
   const [perSecond, setPerSecond] = React.useState(0);
-  const [numCookies, setNumCookies] = React.useState(10);
+  const [numCookies, setNumCookies] = React.useState(0);
   const [purchasedItems, setPurchasedItems] = React.useState({
       cursor: 0,
       grandma: 0,
@@ -60,19 +60,6 @@ const Game = () => {
       setPerSecond(perSecond + itemObj.value);
     }
   };
-
-  // React.useEffect(() => {
-  //   function enterHandler(event) {
-  //     if (event.code === 'Enter') {
-  //     buyItem();
-  //     }
-  //   }
-  //   window.addEventListener('keyup', enterHandler);
-
-  //   return () => {
-  //     window.removeEventListener('keyup', enterHandler);
-  //   };
-  // }, []);
 
   function calculateCookiesPerTick() {
     let result = 0;
